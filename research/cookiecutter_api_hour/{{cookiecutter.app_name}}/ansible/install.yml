@@ -1,0 +1,45 @@
+---
+- name: Install {{cookiecutter.app_name}} on a server
+  hosts:
+        - {{cookiecutter.server_name}}
+  gather_facts: True
+  tasks:
+        - name: Install packages on Debian
+          apt: name={{item}} state=present
+          when: ansible_os_family == 'Debian'
+          with_items:
+            - git
+
+        - name: Install packages on CentOS
+          yum: name=git state=present
+          when: ansible_os_family == 'RedHat'
+          with_items:
+            - git
+
+        - name: Clone project
+          git: repo={{cookiecutter.git_repository}} dest=/opt/{{cookiecutter.app_name}}
+
+        - name: Install requirements
+          pip: requirements=/opt/{{cookiecutter.app_name}}/requirements.txt
+               virtualenv=/opt/{{cookiecutter.app_name}}/pyvenv
+               virtualenv_command=/usr/local/pythonz/pythons/CPython-3.4.3/bin/pyvenv
+
+        - name: Create log dir
+          file: dest=/var/log/{{cookiecutter.app_name}} owner=root group=root state=directory
+
+        - name: Link default config file
+          file: state=link dest=/etc/default/{{cookiecutter.app_name}} src=/opt/{{cookiecutter.app_name}}/etc/default/{{cookiecutter.app_name}}
+
+        - name: Link startup script
+          file: state=link dest=/etc/init.d/{{cookiecutter.app_name}} src=/opt/{{cookiecutter.app_name}}/etc/init.d/{{cookiecutter.app_name}}
+
+        - name: Link logrotate config file
+          file: state=link dest=/etc/logrotate.d/{{cookiecutter.app_name}} src=/opt/{{cookiecutter.app_name}}/etc/logrotate.d/{{cookiecutter.app_name}}
+
+        - name: Make it start with the system
+          service: name={{cookiecutter.app_name}} enabled=yes
+
+        - name: Copy the template configuration file to etc
+          command: cp -a /opt/{{cookiecutter.app_name}}/etc/{{cookiecutter.app_name}} /etc/
+          args:
+            creates: "/etc/{{cookiecutter.app_name}}"

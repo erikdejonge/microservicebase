@@ -1,0 +1,9 @@
+-e .
+wheel
+ipdb
+ipython
+configobj
+ujson
+setproctitle
+gunicorn
+PyYAML

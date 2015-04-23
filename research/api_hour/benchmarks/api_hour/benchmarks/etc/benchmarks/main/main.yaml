@@ -1,0 +1,12 @@
+---
+event_loop: asyncio
+engines:
+  pg:
+    host: 127.0.0.1
+    port: 5432
+    dbname: benchmarks
+    user: asterisk
+    password: asterisk
+    minsize: 30
+    maxsize: 30
+    schema: public
