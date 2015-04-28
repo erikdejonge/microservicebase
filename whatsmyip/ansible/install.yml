@@ -1,0 +1,45 @@
+---
+- name: Install whatsmyip on a server
+  hosts:
+        - k8s.a8.nl
+  gather_facts: True
+  tasks:
+        - name: Install packages on Debian
+          apt: name= state=present
+          when: ansible_os_family == 'Debian'
+          with_items:
+            - git
+
+        - name: Install packages on CentOS
+          yum: name=git state=present
+          when: ansible_os_family == 'RedHat'
+          with_items:
+            - git
+
+        - name: Clone project
+          git: repo=git@github.com dest=/opt/whatsmyip
+
+        - name: Install requirements
+          pip: requirements=/opt/whatsmyip/requirements.txt
+               virtualenv=/opt/whatsmyip/pyvenv
+               virtualenv_command=/usr/local/pythonz/pythons/CPython-3.4.3/bin/pyvenv
+
+        - name: Create log dir
+          file: dest=/var/log/whatsmyip owner=root group=root state=directory
+
+        - name: Link default config file
+          file: state=link dest=/etc/default/whatsmyip src=/opt/whatsmyip/etc/default/whatsmyip
+
+        - name: Link startup script
+          file: state=link dest=/etc/init.d/whatsmyip src=/opt/whatsmyip/etc/init.d/whatsmyip
+
+        - name: Link logrotate config file
+          file: state=link dest=/etc/logrotate.d/whatsmyip src=/opt/whatsmyip/etc/logrotate.d/whatsmyip
+
+        - name: Make it start with the system
+          service: name=whatsmyip enabled=yes
+
+        - name: Copy the template configuration file to etc
+          command: cp -a /opt/whatsmyip/etc/whatsmyip /etc/
+          args:
+            creates: "/etc/whatsmyip"

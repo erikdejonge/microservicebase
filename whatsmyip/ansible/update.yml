@@ -1,0 +1,20 @@
+---
+- name: Install whatsmyip on a server
+  hosts:
+        - k8s.a8.nl
+  gather_facts: False
+  tasks:
+        - name: Update main repo
+          command: "git push"
+          delegate_to: localhost
+
+        - name: Pull the fresh code
+          git: repo=git@github.com dest=/opt/whatsmyip
+
+        - name: Install requirements
+          pip: requirements=/opt/whatsmyip/requirements.txt
+               virtualenv=/opt/whatsmyip/pyvenv
+               virtualenv_command=/usr/local/pythonz/pythons/CPython-3.4.3/bin/pyvenv
+
+        - name: Restart the service
+          service: name=whatsmyip state=restarted
